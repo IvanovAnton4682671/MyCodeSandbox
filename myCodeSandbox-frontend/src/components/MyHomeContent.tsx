@@ -1,4 +1,4 @@
-import { Flex, Select, TextArea, ScrollArea, Button } from "@radix-ui/themes";
+import { Flex, Select, Box, ScrollArea, TextArea, Button } from "@radix-ui/themes";
 import { PlayIcon, TrashIcon } from "@radix-ui/react-icons";
 
 function MyHomeContent() {
@@ -12,9 +12,18 @@ function MyHomeContent() {
                     <Select.Item value="java">Java</Select.Item>
                 </Select.Content>
             </Select.Root>
-            <TextArea placeholder="Write your code here..." resize="none" style={{ width: "70%", height: "70%" }}>
-                <ScrollArea type="auto" scrollbars="vertical" />
-            </TextArea>
+            <Flex direction="row" width="80%" height="70%" justify="center" align="center" gap="3">
+                <Box style={{ width: "100%", height: "100%" }}>
+                    <ScrollArea type="auto" scrollbars="vertical" style={{ width: "100%", height: "100%" }}>
+                        <TextArea placeholder="Пишите ваш код здесь..." resize="none" style={{ width: "100%", height: "100%", wordWrap: "normal" }}/>
+                    </ScrollArea>
+                </Box>
+                <Box style={{ width: "100%", height: "100%" }}>
+                    <ScrollArea type="auto" scrollbars="both" style={{ width: "100%", height: "100%" }}>
+                        <TextArea placeholder="Результат работы вашего кода будет здесь..." resize="none" readOnly style={{ width: "100%", height: "100%", wordWrap: "normal" }}/>
+                    </ScrollArea>
+                </Box>
+            </Flex>
             <Flex direction="row" justify="center" align="center" gap="3">
                 <Button>
                     <PlayIcon fontSize="20px"/>

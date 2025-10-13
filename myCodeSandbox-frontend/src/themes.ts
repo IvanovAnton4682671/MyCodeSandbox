@@ -1,11 +1,11 @@
 type MyTheme = {
     appearance: "light" | "dark";
-    accentColor: "indigo" | "mint" | "amber";
+    accentColor: "plum" | "mint";
 }
 
 const lightTheme: MyTheme = {
     appearance: "light",
-    accentColor: "indigo"
+    accentColor: "plum"
 };
 
 const darkTheme: MyTheme = {
@@ -13,15 +13,9 @@ const darkTheme: MyTheme = {
     accentColor: "mint"
 };
 
-const highContrastTheme: MyTheme = {
-    appearance: "dark",
-    accentColor: "amber"
-}
-
-export type MyThemeType = "light" | "dark" | "highContrast";
+export type MyThemeType = "light" | "dark";
 
 export const themes: Record<MyThemeType, MyTheme> = {
     "light": lightTheme,
     "dark": darkTheme,
-    "highContrast": highContrastTheme
 };

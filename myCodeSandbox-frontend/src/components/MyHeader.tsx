@@ -1,6 +1,6 @@
 import type { MyThemeType } from "../themes";
 import { Flex, Text, Button } from "@radix-ui/themes";
-import { SunIcon, MoonIcon, EyeOpenIcon } from "@radix-ui/react-icons";
+import { SunIcon, MoonIcon } from "@radix-ui/react-icons";
 
 interface MyHeaderProps {
     onThemeChange: (currentTheme: MyThemeType) => void;
@@ -18,10 +18,6 @@ function MyHeader({ onThemeChange }: MyHeaderProps) {
                 <Button onClick={ () => onThemeChange("dark") }>
                     <MoonIcon fontSize="20px"/>
                     Тёмная
-                </Button>
-                <Button onClick={ () => onThemeChange("highContrast") }>
-                    <EyeOpenIcon fontSize="20px"/>
-                    Высокий контраст
                 </Button>
             </Flex>
         </Flex>

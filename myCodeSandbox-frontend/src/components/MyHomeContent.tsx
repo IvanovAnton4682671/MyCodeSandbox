@@ -90,11 +90,11 @@ function MyHomeContent({ currentTheme }: MyHomeContentProps) {
                 </Box>
             </Flex>
             <Flex direction="row" justify="center" align="center" gap="3">
-                <Button onClick={ () => handleRunCode() }>
+                <Button variant="solid" onClick={ () => handleRunCode() }>
                     <PlayIcon fontSize="20px"/>
                     Запустить
                 </Button>
-                <Button onClick={ () => handleClear() }>
+                <Button variant="solid" onClick={ () => handleClear() }>
                     <TrashIcon fontSize="20px"/>
                     Очистить
                 </Button>

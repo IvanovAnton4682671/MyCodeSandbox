@@ -10,7 +10,7 @@ function App() {
   const [currentTheme, setCurrentTheme] = React.useState<MyThemeType>("light");
 
   return(
-    <Theme scaling="100%" radius="medium" appearance={ themes[currentTheme].appearance } accentColor={ themes[currentTheme].accentColor }>
+    <Theme scaling="100%" radius="none" appearance={ themes[currentTheme].appearance } accentColor={ themes[currentTheme].accentColor }>
       <Flex width="100vw" height="100vh">
         <MyHome currentTheme={ currentTheme } onThemeChange={ setCurrentTheme }/>
       </Flex>

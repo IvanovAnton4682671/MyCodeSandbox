@@ -8,14 +8,14 @@ interface MyHeaderProps {
 
 function MyHeader({ onThemeChange }: MyHeaderProps) {
     return(
-        <Flex width="100%" height="100%" direction="row" justify="between" align="center" style={{ paddingLeft: "20px", paddingRight: "20px" }}>
+        <Flex width="100%" height="100%" direction="row" justify="between" align="center" style={{ paddingLeft: "30px", paddingRight: "30px" }}>
             <Text size="7" weight="bold">MyCodeSandbox</Text>
             <Flex direction="row" justify="center" align="center" gap="3">
-                <Button onClick={ () => onThemeChange("light") }>
+                <Button variant="solid" onClick={ () => onThemeChange("light") }>
                     <SunIcon fontSize="20px"/>
                     Светлая
                 </Button>
-                <Button onClick={ () => onThemeChange("dark") }>
+                <Button variant="solid" onClick={ () => onThemeChange("dark") }>
                     <MoonIcon fontSize="20px"/>
                     Тёмная
                 </Button>

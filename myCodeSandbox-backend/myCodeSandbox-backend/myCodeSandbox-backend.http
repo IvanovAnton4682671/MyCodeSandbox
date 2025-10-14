@@ -1,0 +1,6 @@
+@myCodeSandbox_backend_HostAddress = http://localhost:5230
+
+GET {{myCodeSandbox_backend_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

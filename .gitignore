@@ -1,8 +1,8 @@
 .idea
 
 myCodeSandbox-backend/.idea
-myCodeSandbox-backend/bin
-myCodeSandbox-backend/obj
-myCodeSandbox-backend/appsettings.Development.json
+myCodeSandbox-backend/myCodeSandbox-backend/bin
+myCodeSandbox-backend/myCodeSandbox-backend/obj
+myCodeSandbox-backend/myCodeSandbox-backend/appsettings.Development.json
 
 myCodeSandbox-frontend/node_modules

@@ -12,7 +12,7 @@ function App() {
   return(
     <Theme scaling="100%" radius="medium" appearance={ themes[currentTheme].appearance } accentColor={ themes[currentTheme].accentColor }>
       <Flex width="100vw" height="100vh">
-        <MyHome onThemeChange={ setCurrentTheme }/>
+        <MyHome currentTheme={ currentTheme } onThemeChange={ setCurrentTheme }/>
       </Flex>
     </Theme>
   )

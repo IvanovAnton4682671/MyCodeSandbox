@@ -1,35 +1,100 @@
-import { Flex, Select, Box, ScrollArea, TextArea, Button } from "@radix-ui/themes";
+import type { MyThemeType } from "../themes";
+import React from "react";
+import { Flex, Select, Box, Button } from "@radix-ui/themes";
+import { Editor } from "@monaco-editor/react";
 import { PlayIcon, TrashIcon } from "@radix-ui/react-icons";
 
-function MyHomeContent() {
+interface MyHomeContentProps {
+    currentTheme: MyThemeType;
+}
+
+type MyCodeLanguages = "python" | "java" | "cpp";
+
+function MyHomeContent({ currentTheme }: MyHomeContentProps) {
+    const [language, setLanguage] = React.useState<MyCodeLanguages>("python");
+    const [code, setCode] = React.useState<string>("");
+    const [output, setOutput] = React.useState<string>("");
+
+    const getMonacoLanguage = (lang: MyCodeLanguages) => {
+        switch (lang) {
+            case "python": return "python";
+            case "java": return "java";
+            case "cpp": return "cpp";
+            default: return "python";
+        }
+    };
+
+    const handleRunCode = () => {
+        setOutput(`Пока тут только ваш код:\n${code}`);
+    };
+
+    const handleClear = () => {
+        setCode("");
+        setOutput("");
+    };
+
     return(
         <Flex width="100%" height="100%" direction="column" justify="center" align="center" gap="3">
-            <Select.Root defaultValue="c#">
+            <Select.Root value={ language } onValueChange={ (value: MyCodeLanguages) => setLanguage(value) }>
                 <Select.Trigger />
                 <Select.Content>
-                    <Select.Item value="c#">C#</Select.Item>
                     <Select.Item value="python">Python</Select.Item>
                     <Select.Item value="java">Java</Select.Item>
+                    <Select.Item value="cpp">C++</Select.Item>
                 </Select.Content>
             </Select.Root>
             <Flex direction="row" width="80%" height="70%" justify="center" align="center" gap="3">
                 <Box style={{ width: "100%", height: "100%" }}>
-                    <ScrollArea type="auto" scrollbars="vertical" style={{ width: "100%", height: "100%" }}>
-                        <TextArea placeholder="Пишите ваш код здесь..." resize="none" style={{ width: "100%", height: "100%", wordWrap: "normal" }}/>
-                    </ScrollArea>
+                    <Editor 
+                        theme={ currentTheme === "light" ? "vs" : "vs-dark" }
+                        language={ getMonacoLanguage(language) }
+                        value={ code }
+                        onChange={ (value) => setCode(value || "") }
+                        options={{
+                            minimap: { enabled: false },
+                            scrollBeyondLastLine: false,
+                            automaticLayout: true,
+                            fontSize: 14,
+                            wordWrap: "off",
+                            lineNumbers: "on",
+                            folding: true,
+                            lineNumbersMinChars: 3,
+                            scrollbar: {
+                                vertical: "visible",
+                                horizontal: "visible",
+                                useShadows: false
+                            }
+                        }}
+                    />
                 </Box>
                 <Box style={{ width: "100%", height: "100%" }}>
-                    <ScrollArea type="auto" scrollbars="both" style={{ width: "100%", height: "100%" }}>
-                        <TextArea placeholder="Результат работы вашего кода будет здесь..." resize="none" readOnly style={{ width: "100%", height: "100%", wordWrap: "normal" }}/>
-                    </ScrollArea>
+                    <Editor
+                        theme={ currentTheme === "light" ? "vs" : "vs-dark" }
+                        language="plaintext"
+                        value={ output }
+                        options={{
+                            minimap: { enabled: false },
+                            scrollBeyondLastLine: false,
+                            automaticLayout: true,
+                            fontSize: 14,
+                            wordWrap: "off",
+                            lineNumbers: "off",
+                            readOnly: true,
+                            scrollbar: {
+                                vertical: "visible",
+                                horizontal: "visible",
+                                useShadows: false
+                            }
+                        }}
+                    />
                 </Box>
             </Flex>
             <Flex direction="row" justify="center" align="center" gap="3">
-                <Button>
+                <Button onClick={ () => handleRunCode() }>
                     <PlayIcon fontSize="20px"/>
                     Запустить
                 </Button>
-                <Button>
+                <Button onClick={ () => handleClear() }>
                     <TrashIcon fontSize="20px"/>
                     Очистить
                 </Button>

@@ -1,5 +1,6 @@
 import type { MyThemeType } from "../themes";
 import React from "react";
+import { postCodeExecution } from "../api/codeRequest";
 import { Flex, Select, Box, Button } from "@radix-ui/themes";
 import { Editor } from "@monaco-editor/react";
 import { PlayIcon, TrashIcon } from "@radix-ui/react-icons";
@@ -24,8 +25,9 @@ function MyHomeContent({ currentTheme }: MyHomeContentProps) {
         }
     };
 
-    const handleRunCode = () => {
-        setOutput(`Пока тут только ваш код:\n${code}`);
+    const handleRunCode = async () => {
+        const response = await postCodeExecution(code);
+        setOutput(response);
     };
 
     const handleClear = () => {

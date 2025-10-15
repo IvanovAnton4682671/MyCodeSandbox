@@ -5,5 +5,5 @@ POST {{host}}/execution
 Content-Type: application/json
 
 {
-    "CodeInput": "def puk():\n    print(srenk)"
+    "CodeInput": "def puk():\n    print('srenk')"
 }

@@ -1,0 +1,9 @@
+@host = http://localhost:5164/api/code
+
+### Запуск кода
+POST {{host}}/execution
+Content-Type: application/json
+
+{
+    "CodeInput": "def puk():\n    print(srenk)"
+}

@@ -9,6 +9,8 @@ builder.Services.AddCors(options =>
 });
 
 builder.Services.AddControllers();
+builder.Services.AddScoped<ICodeService, CodeService>();
+builder.Services.AddScoped<IDockerService, DockerService>();
 
 var app = builder.Build();
 

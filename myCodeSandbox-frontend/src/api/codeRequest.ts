@@ -1,12 +1,14 @@
 import axios from "axios";
+import type { MyCodeLanguages } from "../components/languages";
 
 const host = "http://localhost:5164/api/code/execution"
 
-export const postCodeExecution = async (code: string) => {
+export const postCodeExecution = async (language: MyCodeLanguages, code: string) => {
     try {
         const response = await axios.post(
             host,
             {
+                CodeLanguage: language,
                 CodeInput: code
             },
             {

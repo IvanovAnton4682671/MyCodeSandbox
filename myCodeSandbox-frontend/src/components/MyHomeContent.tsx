@@ -1,5 +1,6 @@
 import type { MyThemeType } from "../themes";
 import React from "react";
+import type { MyCodeLanguages } from "./languages";
 import { postCodeExecution } from "../api/codeRequest";
 import { Flex, Select, Box, Button } from "@radix-ui/themes";
 import { Editor } from "@monaco-editor/react";
@@ -8,8 +9,6 @@ import { PlayIcon, TrashIcon } from "@radix-ui/react-icons";
 interface MyHomeContentProps {
     currentTheme: MyThemeType;
 }
-
-type MyCodeLanguages = "python" | "java" | "cpp";
 
 function MyHomeContent({ currentTheme }: MyHomeContentProps) {
     const [language, setLanguage] = React.useState<MyCodeLanguages>("python");
@@ -26,7 +25,7 @@ function MyHomeContent({ currentTheme }: MyHomeContentProps) {
     };
 
     const handleRunCode = async () => {
-        const response = await postCodeExecution(code);
+        const response = await postCodeExecution(language, code);
         setOutput(response);
     };
 

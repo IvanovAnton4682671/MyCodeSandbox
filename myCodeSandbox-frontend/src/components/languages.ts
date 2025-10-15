@@ -1,0 +1,1 @@
+export type MyCodeLanguages = "python" | "java" | "cpp";

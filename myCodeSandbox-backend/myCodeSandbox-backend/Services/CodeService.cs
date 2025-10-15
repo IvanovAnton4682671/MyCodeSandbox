@@ -1,9 +1,11 @@
 namespace myCodeSandbox_backend.Services;
 
-public class CodeService : ICodeService
+public class CodeService(IDockerService dockerService) : ICodeService
 {
-    public string CodeExecution(CodeRequestDto requestDto)
+    public async Task<string> CodeExecution(CodeRequestDto requestDto)
     {
-        return $"Сервер обработал ваш код.\nЯзык: {requestDto.CodeLanguage}\nКод:\n{requestDto.CodeInput}";
+        var result = await dockerService.ExecuteCodeAsync(requestDto);
+        if (!result.Success) return $"Ошибка:\n{result.Error}";
+        return $"Результат выполнения:\n{result.CodeResult}";
     }
 }

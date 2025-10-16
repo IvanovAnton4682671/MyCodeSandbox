@@ -1,15 +1,17 @@
+using System.Diagnostics;
+
 namespace myCodeSandbox_backend.Services;
 
 public class DockerService : IDockerService
 {
     private readonly DockerClient _dockerClient = new DockerClientConfiguration(
-        new Uri(Environment.OSVersion.Platform == PlatformID.Unix ? "unix://var/run/docker.sock" : "npipe://./pipe/docker_engine")).CreateClient();
+        new Uri(Environment.OSVersion.Platform == PlatformID.Unix ? "unix:///var/run/docker.sock" : "npipe://./pipe/docker_engine")).CreateClient();
     private readonly List<string> _folderNames = ["tempDockerDir", "python", "java", "cpp"];
     private readonly Dictionary<string, string> _languageExtensions = new Dictionary<string, string>()
     {
-        { "python", ".py" },
-        { "java", ".java" },
-        { "cpp", ".cpp" }
+        { "python", "py" },
+        { "java", "java" },
+        { "cpp", "cpp" }
     };
 
     // Вспомогательная структура для формирования образа
@@ -30,13 +32,13 @@ public class DockerService : IDockerService
             "python" => new ImageConfig
             {
                 ImageName = "python:3.9-slim",
-                FileExtension = "py",
+                FileExtension = _languageExtensions[language],
                 Command = (fileName) => new List<string> { "python", fileName }
             },
             "java" => new ImageConfig
             {
                 ImageName = "openjdk:17-jdk-slim",
-                FileExtension = "java",
+                FileExtension = _languageExtensions[language],
                 Command = (fileName) => new List<string> { "sh", "-c", $"javac {fileName} && java {Path.GetFileNameWithoutExtension(fileName)}" }
             },
             _ => throw new ArgumentException($"Неподдерживаемый язык: {language}")
@@ -46,9 +48,9 @@ public class DockerService : IDockerService
     // Создание файла с кодом
     private async Task<string> CreateTempFileAsync(string language, string code)
     {
-        // Поднимаемся на 3 уровня вверх (в MyCodeSandbox)
+        // Поднимаемся на 2 уровня вверх (в MyCodeSandbox)
         DirectoryInfo currentDir = new DirectoryInfo(Directory.GetCurrentDirectory());
-        DirectoryInfo targetDir = currentDir.Parent?.Parent ?? throw new DirectoryNotFoundException("Не удалось подняться на 3 уровня вверх");
+        DirectoryInfo targetDir = currentDir.Parent?.Parent ?? throw new DirectoryNotFoundException("Не удалось подняться на 2 уровня вверх");
         
         // Путь к папке докера
         string tempDockerDirPath = Path.Combine(targetDir.FullName, _folderNames[0]);
@@ -71,7 +73,7 @@ public class DockerService : IDockerService
         string finalPath = Path.Combine(tempDockerDirPath, targetSubfolder);
         
         // Создаём уникальное имя файла
-        string fileName = $"code_{DateTime.Now:yyyyMMdd_HHmmss}{_languageExtensions[language]}";
+        string fileName = $"code_{DateTime.Now:yyyyMMdd_HHmmss}.{_languageExtensions[language]}";
         string fullFilePath = Path.Combine(finalPath, fileName);
         
         // Записываем файл
@@ -79,74 +81,141 @@ public class DockerService : IDockerService
         return fullFilePath;
     }
 
+    private async Task<string> ReadMultiplexedStream(MultiplexedStream multiplexedStream)
+    {
+        var result = new StringBuilder();
+        var buffer = new byte[1024];
+
+        try
+        {
+            while (true)
+            {
+                var readResult = await multiplexedStream.ReadOutputAsync(buffer, 0, buffer.Length, CancellationToken.None);
+                if (readResult.EOF) break;
+                if (readResult.Target == MultiplexedStream.TargetStream.StandardOut || readResult.Target == MultiplexedStream.TargetStream.StandardError)
+                {
+                    var text = Encoding.UTF8.GetString(buffer, 0, readResult.Count);
+                    result.Append(text);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Ошибка при чтении логов: {ex.Message}");
+        }
+        
+        return result.ToString();
+    }
+    
     private async Task<CodeResponseDto> RunContainerAsync(string filePath, ImageConfig imageConfig)
     {
         // Имя контейнера
-        var containerName = $"codesandbox_{Guid.NewGuid()}";
+        var containerName = $"codesandbox_{DateTime.Now:yyyyMMdd_HHmmss}";
+        
+        // Имя файла с кодом
+        var fileName = Path.GetFileName(filePath);
         
         // Параметры создания контейнера
         var createParams = new CreateContainerParameters
         {
-            Image = imageConfig.ImageName, Cmd = imageConfig.GetCommand(Path.GetFileName(filePath)), Name = containerName, HostConfig = new HostConfig()
+            Image = imageConfig.ImageName,
+            Cmd = imageConfig.GetCommand(Path.GetFileName(filePath)),
+            Name = containerName,
+            HostConfig = new HostConfig()
             {
-                Binds = new List<string>
-                {
-                    $"{Path.GetDirectoryName(filePath)}:/app:ro"
-                },
-                AutoRemove = true, Memory = 1024 * 1024 * 256
+                Binds = new List<string> { $"{Path.GetDirectoryName(filePath)}:/app:ro" },
+                //AutoRemove = true,
+                Memory = 1024 * 1024 * 256
             },
             WorkingDir = "/app"
         };
 
+        // Заранее зануляем id контейнера
+        string containerId = null;
+
         try
         {
             // Создаём контейнер
-            var container = await _dockerClient.Containers.CreateContainerAsync(createParams);
+            var containerResponse = await _dockerClient.Containers.CreateContainerAsync(createParams);
+            containerId = containerResponse.ID;
 
             // Запускаем контейнер
-            var started = await _dockerClient.Containers.StartContainerAsync(container.ID, new ContainerStartParameters());
-            if (!started) throw new Exception($"Не удалось запустить контейнер {container.ID}");
+            var started = await _dockerClient.Containers.StartContainerAsync(containerId, new ContainerStartParameters());
+            if (!started) throw new Exception($"Не удалось запустить контейнер {containerId}");
 
-            // Ждём завершения выполнения
-            var waitTask = _dockerClient.Containers.WaitContainerAsync(container.ID);
-            var completion = await Task.WhenAny(waitTask, Task.Delay(TimeSpan.FromSeconds(30)));
-            if (completion != waitTask)
+            // Ждём завершения выполнения с таймаутом
+            var containerTask = _dockerClient.Containers.WaitContainerAsync(containerId);
+            var timeoutTask = Task.Delay(TimeSpan.FromSeconds(30));
+            var completedTask = await Task.WhenAny(containerTask, timeoutTask);
+            
+            // Заранее создаём пустой вывод
+            string output = string.Empty;
+            
+            if (completedTask == timeoutTask)
             {
-                await _dockerClient.Containers.StopContainerAsync(container.ID, new ContainerStopParameters());
+                await _dockerClient.Containers.StopContainerAsync(containerId, new ContainerStopParameters() { WaitBeforeKillSeconds = 3 });
+                
+                // Получаем логи таймаута
+                var logsAfterTimeout = await _dockerClient.Containers.GetContainerLogsAsync(
+                    containerId,
+                    false,
+                    new ContainerLogsParameters()
+                    {
+                        ShowStdout = true,
+                        ShowStderr = true,
+                        Follow = false
+                    });
+                output = await ReadMultiplexedStream(logsAfterTimeout);
+                
                 return new CodeResponseDto()
                 {
-                    CodeResult = String.Empty, Error = "Таймаут ожидания (30 секунд)", Success = false
+                    CodeResult = output,
+                    Error = "Таймаут ожидания (30 секунд)",
+                    Success = false
                 };
             }
 
-            // Получаем логи
+            // Получаем логи до таймаута/удаления контейнера
             var logs = await _dockerClient.Containers.GetContainerLogsAsync(
-                container.ID,
+                containerId,
                 false,
                 new ContainerLogsParameters()
                 {
-                    ShowStdout = true, ShowStderr = true
+                    ShowStdout = true,
+                    ShowStderr = true,
+                    Follow = false
                 });
-            using var reader = new StreamReader(logs.ToString() ?? string.Empty);
-            var output = await reader.ReadToEndAsync();
+            output = await ReadMultiplexedStream(logs);
+            
             return new CodeResponseDto()
             {
-                CodeResult = output, Error = null, Success = true
+                CodeResult = output,
+                Error = null,
+                Success = true
+            };
+        }
+        catch (Exception ex)
+        {
+            return new CodeResponseDto()
+            {
+                CodeResult = null,
+                Error = $"Ошибка выполнения:\n{ex.Message}",
+                Success = false
             };
         }
         finally
         {
-            // Проверяем что контейнер удалён
-            try
+            // Удаляем контейнер
+            if (containerId != null)
             {
-                await _dockerClient.Containers.RemoveContainerAsync(containerName, new ContainerRemoveParameters()
+                try
                 {
-                    Force = true
-                });
-            }
-            catch (Exception ex)
-            {
-                // Игнорируем ошибки удаления
+                    await _dockerClient.Containers.RemoveContainerAsync(containerId, new ContainerRemoveParameters() { Force = true });
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Ошибка при удалении контейнера: {ex.Message}");
+                }
             }
         }
     }
@@ -165,7 +234,14 @@ public class DockerService : IDockerService
             CodeResponseDto result = await RunContainerAsync(tempFilePath, imageConfig);
 
             // Удаляем временный файл
-            File.Delete(tempFilePath);
+            try
+            {
+                File.Delete(tempFilePath);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Ошибка при удалении временного файла: {ex.Message}");
+            }
 
             return result;
         }
@@ -173,7 +249,9 @@ public class DockerService : IDockerService
         {
             return new CodeResponseDto()
             {
-                CodeResult = string.Empty, Error = $"Ошибка выполнения:\n{ex.Message}", Success = false
+                CodeResult = null,
+                Error = $"Ошибка выполнения:\n{ex.Message}",
+                Success = false
             };
         }
     }

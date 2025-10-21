@@ -2,12 +2,12 @@ namespace myCodeSandbox_backend.Controllers;
 
 [ApiController]
 [Route("api/code")]
-public class CodeController(ICodeService codeService) : ControllerBase, ICodeController
+public class CodeController(ICodeExecutionService codeExecutionService) : ControllerBase, ICodeController
 {
     [HttpPost("execution")]
-    public async Task<IActionResult> CodeExecution([FromBody] CodeRequestDto requestDto)
+    public async Task<IActionResult> CodeExecution([FromBody] CodeExecutionRequest request)
     {
-        var executionResult = await codeService.CodeExecution(requestDto);
+        string executionResult = await codeExecutionService.CodeExecutionAsync(request);
         return Ok(executionResult);
     }
 }

@@ -1,9 +1,10 @@
-global using myCodeSandbox_backend.Dtos;
+global using myCodeSandbox_backend.Constants;
 global using myCodeSandbox_backend.Controllers;
-global using myCodeSandbox_backend.Interfaces;
+global using myCodeSandbox_backend.Models.Requests;
+global using myCodeSandbox_backend.Models.Responses;
 global using myCodeSandbox_backend.Services;
+global using myCodeSandbox_backend.Services.Interfaces;
 global using System;
-global using System.Diagnostics;
 global using System.IO;
 global using System.Text;
 global using Microsoft.AspNetCore.Mvc;

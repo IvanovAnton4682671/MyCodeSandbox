@@ -5,6 +5,7 @@ POST {{host}}/execution
 Content-Type: application/json
 
 {
-    "CodeLanguage": "python",
-    "CodeInput": "def puk():\n    print('srenk')"
+    "Language": "python",
+    "Version": "3.9-slim",
+    "Code": "def puk():\n    print('srenk')\npuk()"
 }

@@ -9,10 +9,12 @@ builder.Services.AddCors(options =>
 });
 
 builder.Services.AddControllers();
-builder.Services.AddScoped<ICodeService, CodeService>();
+builder.Services.AddScoped<IFileService, FileService>();
+builder.Services.AddScoped<IContainerService, ContainerService>();
 builder.Services.AddScoped<IDockerService, DockerService>();
+builder.Services.AddScoped<ICodeExecutionService, CodeExecutionService>();
 
-var app = builder.Build();
+WebApplication app = builder.Build();
 
 app.UseCors("AllowReactApp");
 app.UseRouting();
